@@ -35,7 +35,7 @@ u32 rand(){
 u32 fb[FB_WIDTH*FB_HEIGHT];
 #define FBAT(x,y) ((x) + (y)*FB_WIDTH)
 #define SCALE 16
-i32 hx,hy,tx,ty,pd,ppd,ax,ay,alive = 1;
+i32 hx,hy,tx,ty,pd,ax,ay,alive = 1;
 LARGE_INTEGER freq, before, now;
 HWND wnd;
 u8 font[]={95,0,0,0,0,0,0,0,4,3,4,3,0,0,0,0,20,127,20,127,20,0,0,0,36,42,127,42,18,0,0,0,67,48,8,6,97,0,0,0,48,74,93,50,72,0,0,0,4,3,0,0,0,0,0,0,28,34,65,0,0,0,0,0,65,34,28,0,0,0,0,0,20,8,20,0,0,0,0,0,8,8,62,8,8,0,0,0,128,96,0,0,0,0,0,0,8,8,8,8,8,0,0,0,96,0,0,0,0,0,0,0,64,48,8,6,1,0,0,0,62,81,73,69,62,0,0,0,64,66,127,64,64,0,0,0,98,81,73,73,102,0,0,0,34,65,73,73,54,0,0,0,24,20,18,17,127,0,0,0,47,73,69,69,57,0,0,0,60,82,73,73,48,0,0,0,3,1,113,9,7,0,0,0,54,73,73,73,54,0,0,0,6,73,73,41,30,0,0,0,102,0,0,0,0,0,0,0,64,38,0,0,0,0,0,0,8,20,34,65,0,0,0,0,36,36,36,36,36,0,0,0,65,34,20,8,0,0,0,0,2,1,81,9,6,0,0,0,62,65,93,81,94,0,0,0,120,22,17,22,120,0,0,0,127,69,69,69,58,0,0,0,62,65,65,65,34,0,0,0,127,65,65,65,62,0,0,0,127,73,73,73,65,0,0,0,127,5,5,5,1,0,0,0,62,65,65,73,58,0,0,0,127,8,8,8,127,0,0,0,65,127,65,0,0,0,0,0,32,64,65,65,63,0,0,0,127,8,20,34,65,0,0,0,127,64,64,64,64,0,0,0,127,2,4,2,127,0,0,0,127,3,28,96,127,0,0,0,62,65,65,65,62,0,0,0,127,9,9,9,6,0,0,0,62,65,81,33,94,0,0,0,127,9,9,9,118,0,0,0,38,73,73,73,50,0,0,0,1,1,127,1,1,0,0,0,63,64,64,64,63,0,0,0,7,56,64,56,7,0,0,0,127,32,16,32,127,0,0,0,99,20,8,20,99,0,0,0,3,4,120,4,3,0,0,0,97,81,73,69,67,0,0,0,127,65,65,0,0,0,0,0,1,6,8,48,64,0,0,0,65,65,127,0,0,0,0,0,4,2,1,2,4,0,0,0,128,128,128,128,128,0,0,0,1,2,4,0,0,0,0,0,32,84,84,84,120,0,0,0,127,80,72,72,48,0,0,0,56,68,68,68,0,0,0,0,48,72,72,80,127,0,0,0,56,84,84,84,88,0,0,0,16,124,18,4,0,0,0,0,152,164,164,248,0,0,0,0,127,16,8,8,112,0,0,0,121,0,0,0,0,0,0,0,64,128,128,125,0,0,0,0,127,16,40,68,0,0,0,0,63,64,0,0,0,0,0,0,124,4,24,4,120,0,0,0,124,4,4,120,0,0,0,0,56,68,68,68,56,0,0,0,248,36,36,24,0,0,0,0,24,36,36,248,128,0,0,0,124,8,4,4,8,0,0,0,8,84,84,84,32,0,0,0,8,62,72,0,0,0,0,0,60,64,64,60,64,0,0,0,12,48,64,48,12,0,0,0,60,64,48,64,60,0,0,0,68,40,16,40,68,0,0,0,76,144,144,124,0,0,0,0,68,100,84,76,68,0,0,0,8,54,65,0,0,0,0,0,127,0,0,0,0,0,0,0,65,54,8,0,0,0,0,0,16,8,8,16,16,8,0,0,};
@@ -82,7 +82,6 @@ void start(){
 	tx = hx;
 	ty = hy;
 	pd = VK_RIGHT;
-	ppd = VK_RIGHT;
 	placeApple();
 	alive = 1;
 	FOR(i,COUNT(fb)) fb[i] = 0;
@@ -93,6 +92,7 @@ void start(){
 	ReleaseDC(wnd,dc);
 	QueryPerformanceCounter(&before);
 }
+i32 canTurn = 1;
 LONG WINAPI WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam){
 	switch (msg){
 	case WM_PAINT:{
@@ -113,7 +113,10 @@ LONG WINAPI WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam){
 		return 0;
 	case WM_KEYDOWN:
 		switch (wparam){
-			case VK_LEFT:case VK_RIGHT:case VK_DOWN:case VK_UP: ppd = wparam; break;
+			case VK_LEFT: if (canTurn && pd != VK_RIGHT){pd = wparam; canTurn = 0;} break;
+			case VK_RIGHT: if (canTurn && pd != VK_LEFT){pd = wparam; canTurn = 0;} break;
+			case VK_DOWN: if (canTurn && pd != VK_UP){pd = wparam; canTurn = 0;} break;
+			case VK_UP: if (canTurn && pd != VK_DOWN){pd = wparam; canTurn = 0;} break;
 			case 'R': start(); break;
 		}
 	}
@@ -136,7 +139,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previnstance, char *cmdline, in
 	ShowWindow(wnd,SW_SHOWDEFAULT);
 	MSG msg;
 	QueryPerformanceFrequency(&freq);
-	u64 countsPerTick = freq.QuadPart / 8;
+	u64 countsPerTick = freq.QuadPart / 16;
 	QueryPerformanceCounter(&before);
 	seed = before.LowPart;
 	rand();
@@ -149,12 +152,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previnstance, char *cmdline, in
 			QueryPerformanceCounter(&now);
 			if (now.QuadPart-before.QuadPart >= countsPerTick){
 				before = now;
-				switch (ppd){
-					case VK_LEFT: if (pd != VK_RIGHT) pd = ppd; break;
-					case VK_RIGHT: if (pd != VK_LEFT) pd = ppd; break;
-					case VK_DOWN: if (pd != VK_UP) pd = ppd; break;
-					case VK_UP: if (pd != VK_DOWN) pd = ppd; break;
-				}
+				canTurn = 1;
 				fb[FBAT(hx,hy)] |= pd<<(24);
 				move(&hx,&hy,pd);
 				if (fb[FBAT(hx,hy)] & 0xff000000){
