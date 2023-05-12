@@ -147,8 +147,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previnstance, char *cmdline, in
 			DispatchMessageA(&msg);
 		} else if (alive){
 			QueryPerformanceCounter(&now);
-			while (now.QuadPart-before.QuadPart > countsPerTick){
-				before.QuadPart += countsPerTick;
+			if (now.QuadPart-before.QuadPart >= countsPerTick){
+				before = now;
 				switch (ppd){
 					case VK_LEFT: if (pd != VK_RIGHT) pd = ppd; break;
 					case VK_RIGHT: if (pd != VK_LEFT) pd = ppd; break;
