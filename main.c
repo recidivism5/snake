@@ -37,17 +37,7 @@ u32 fb[FB_WIDTH*FB_HEIGHT];
 #define SCALE 16
 i32 hx,hy,tx,ty,pd,ppd,ax,ay,alive = 1;
 LARGE_INTEGER freq, before, now;
-void start(){
-	hx = FB_WIDTH/2;
-	hy = FB_HEIGHT/2;
-	tx = hx;
-	ty = hy;
-	pd = VK_RIGHT;
-	ppd = VK_RIGHT;
-	alive = 1;
-	FOR(i,COUNT(fb)) fb[i] = 0;
-	QueryPerformanceCounter(&before);
-}
+HWND wnd;
 u8 font[]={95,0,0,0,0,0,0,0,4,3,4,3,0,0,0,0,20,127,20,127,20,0,0,0,36,42,127,42,18,0,0,0,67,48,8,6,97,0,0,0,48,74,93,50,72,0,0,0,4,3,0,0,0,0,0,0,28,34,65,0,0,0,0,0,65,34,28,0,0,0,0,0,20,8,20,0,0,0,0,0,8,8,62,8,8,0,0,0,128,96,0,0,0,0,0,0,8,8,8,8,8,0,0,0,96,0,0,0,0,0,0,0,64,48,8,6,1,0,0,0,62,81,73,69,62,0,0,0,64,66,127,64,64,0,0,0,98,81,73,73,102,0,0,0,34,65,73,73,54,0,0,0,24,20,18,17,127,0,0,0,47,73,69,69,57,0,0,0,60,82,73,73,48,0,0,0,3,1,113,9,7,0,0,0,54,73,73,73,54,0,0,0,6,73,73,41,30,0,0,0,102,0,0,0,0,0,0,0,64,38,0,0,0,0,0,0,8,20,34,65,0,0,0,0,36,36,36,36,36,0,0,0,65,34,20,8,0,0,0,0,2,1,81,9,6,0,0,0,62,65,93,81,94,0,0,0,120,22,17,22,120,0,0,0,127,69,69,69,58,0,0,0,62,65,65,65,34,0,0,0,127,65,65,65,62,0,0,0,127,73,73,73,65,0,0,0,127,5,5,5,1,0,0,0,62,65,65,73,58,0,0,0,127,8,8,8,127,0,0,0,65,127,65,0,0,0,0,0,32,64,65,65,63,0,0,0,127,8,20,34,65,0,0,0,127,64,64,64,64,0,0,0,127,2,4,2,127,0,0,0,127,3,28,96,127,0,0,0,62,65,65,65,62,0,0,0,127,9,9,9,6,0,0,0,62,65,81,33,94,0,0,0,127,9,9,9,118,0,0,0,38,73,73,73,50,0,0,0,1,1,127,1,1,0,0,0,63,64,64,64,63,0,0,0,7,56,64,56,7,0,0,0,127,32,16,32,127,0,0,0,99,20,8,20,99,0,0,0,3,4,120,4,3,0,0,0,97,81,73,69,67,0,0,0,127,65,65,0,0,0,0,0,1,6,8,48,64,0,0,0,65,65,127,0,0,0,0,0,4,2,1,2,4,0,0,0,128,128,128,128,128,0,0,0,1,2,4,0,0,0,0,0,32,84,84,84,120,0,0,0,127,80,72,72,48,0,0,0,56,68,68,68,0,0,0,0,48,72,72,80,127,0,0,0,56,84,84,84,88,0,0,0,16,124,18,4,0,0,0,0,152,164,164,248,0,0,0,0,127,16,8,8,112,0,0,0,121,0,0,0,0,0,0,0,64,128,128,125,0,0,0,0,127,16,40,68,0,0,0,0,63,64,0,0,0,0,0,0,124,4,24,4,120,0,0,0,124,4,4,120,0,0,0,0,56,68,68,68,56,0,0,0,248,36,36,24,0,0,0,0,24,36,36,248,128,0,0,0,124,8,4,4,8,0,0,0,8,84,84,84,32,0,0,0,8,62,72,0,0,0,0,0,60,64,64,60,64,0,0,0,12,48,64,48,12,0,0,0,60,64,48,64,60,0,0,0,68,40,16,40,68,0,0,0,76,144,144,124,0,0,0,0,68,100,84,76,68,0,0,0,8,54,65,0,0,0,0,0,127,0,0,0,0,0,0,0,65,54,8,0,0,0,0,0,16,8,8,16,16,8,0,0,};
 void drawString(i32 x, i32 y, u8 *str, u32 color){
 	while (*str){
@@ -67,10 +57,6 @@ void drawString(i32 x, i32 y, u8 *str, u32 color){
 		str++;
 	}
 }
-void moveApple(){
-	ax = rand() % FB_WIDTH;
-	ay = rand() % FB_HEIGHT;
-}
 void move(i32 *x, i32 *y, i32 d){
 	switch (d){
 		case VK_LEFT: *x = *x ? *x-1 : FB_WIDTH-1; break;
@@ -85,6 +71,27 @@ struct BMI {
 } bmi = {sizeof(struct BMI),FB_WIDTH,FB_HEIGHT,1,32,BI_BITFIELDS};
 void draw(HDC dc){
 	StretchDIBits(dc,0,0,FB_WIDTH*SCALE,FB_HEIGHT*SCALE,0,0,FB_WIDTH,FB_HEIGHT,fb,&bmi,DIB_RGB_COLORS,SRCCOPY);
+}
+void placeApple(){
+	ax = rand() % FB_WIDTH;
+	ay = rand() % FB_HEIGHT;
+}
+void start(){
+	hx = FB_WIDTH/2;
+	hy = FB_HEIGHT/2;
+	tx = hx;
+	ty = hy;
+	pd = VK_RIGHT;
+	ppd = VK_RIGHT;
+	placeApple();
+	alive = 1;
+	FOR(i,COUNT(fb)) fb[i] = 0;
+	fb[FBAT(ax,ay)] |= 0xff0000;
+	fb[FBAT(hx,hy)] = 0xff00;
+	HDC dc = GetDC(wnd);
+	draw(dc);
+	ReleaseDC(wnd,dc);
+	QueryPerformanceCounter(&before);
 }
 LONG WINAPI WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam){
 	switch (msg){
@@ -125,15 +132,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previnstance, char *cmdline, in
 	AdjustWindowRect(&wr,WS_OVERLAPPEDWINDOW,FALSE);
 	int wndWidth = wr.right-wr.left;
 	int wndHeight = wr.bottom-wr.top;
-	HWND wnd = CreateWindowExA(WS_EX_APPWINDOW,wc.lpszClassName,wc.lpszClassName,WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX,GetSystemMetrics(SM_CXSCREEN)/2-wndWidth/2,GetSystemMetrics(SM_CYSCREEN)/2-wndHeight/2,wndWidth,wndHeight,0,0,wc.hInstance,0);
+	wnd = CreateWindowExA(WS_EX_APPWINDOW,wc.lpszClassName,wc.lpszClassName,WS_OVERLAPPEDWINDOW^WS_THICKFRAME^WS_MAXIMIZEBOX,GetSystemMetrics(SM_CXSCREEN)/2-wndWidth/2,GetSystemMetrics(SM_CYSCREEN)/2-wndHeight/2,wndWidth,wndHeight,0,0,wc.hInstance,0);
 	ShowWindow(wnd,SW_SHOWDEFAULT);
 	MSG msg;
 	QueryPerformanceFrequency(&freq);
 	u64 countsPerTick = freq.QuadPart / 8;
-	start();
+	QueryPerformanceCounter(&before);
 	seed = before.LowPart;
 	rand();
-	moveApple();
+	start();
 	do {
 		if (PeekMessageA(&msg,0,0,0,PM_REMOVE)){
 			TranslateMessage(&msg);
@@ -156,17 +163,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previnstance, char *cmdline, in
 					drawString(0,FB_HEIGHT-9,"dead,",0xffff);
 					drawString(0,FB_HEIGHT-16,"press",0xffff);
 					drawString(5,FB_HEIGHT-25,"R",0xffff);
-					break;
-				}
-				if (hx == ax && hy == ay){
-					moveApple();
 				} else {
-					i32 d = fb[FBAT(tx,ty)] >> 24;
-					fb[FBAT(tx,ty)] = 0;
-					move(&tx,&ty,d);
+					if (hx == ax && hy == ay){
+						placeApple();
+					} else {
+						i32 d = fb[FBAT(tx,ty)] >> 24;
+						fb[FBAT(tx,ty)] = 0;
+						move(&tx,&ty,d);
+					}
+					fb[FBAT(ax,ay)] |= 0xff0000;
+					fb[FBAT(hx,hy)] = 0xff00;
 				}
-				fb[FBAT(ax,ay)] |= 0xff0000;
-				fb[FBAT(hx,hy)] = 0xff00;
 				HDC dc = GetDC(wnd);
 				draw(dc);
 				ReleaseDC(wnd,dc);
