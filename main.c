@@ -111,10 +111,8 @@ LONG WINAPI WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam){
 		return 0;
 	case WM_KEYDOWN:
 		switch (wparam){
-			case VK_LEFT: if (canTurn && pd != VK_RIGHT){pd = wparam; canTurn = 0;} break;
-			case VK_RIGHT: if (canTurn && pd != VK_LEFT){pd = wparam; canTurn = 0;} break;
-			case VK_DOWN: if (canTurn && pd != VK_UP){pd = wparam; canTurn = 0;} break;
-			case VK_UP: if (canTurn && pd != VK_DOWN){pd = wparam; canTurn = 0;} break;
+			case VK_LEFT:case VK_RIGHT: if (canTurn && pd != VK_LEFT && pd != VK_RIGHT){pd = wparam; canTurn = 0;} break;
+			case VK_DOWN:case VK_UP: if (canTurn && pd != VK_DOWN && pd != VK_UP){pd = wparam; canTurn = 0;} break;
 			case 'R': start(); break;
 		}
 	}
@@ -167,7 +165,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previnstance, char *cmdline, in
 				fb[FBAT(hx,hy)] = 0xff00;
 			}
 			draw();
-			Sleep(62);
+			Sleep(50);
 		}
 	} while (msg.message != WM_QUIT);
 	return msg.wParam;
